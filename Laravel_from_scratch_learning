@@ -1,0 +1,256 @@
+
+############
+###### install composer first ( PHP required )
+############
+
+############
+###### Run composer command to install laravel
+# composer global require laravel/installer
+############
+
+############
+###### Create new laravel project
+# laravel new <projectName>
+############
+
+############
+###### Run laravel server
+# php artisan serve
+############
+
+############
+###### Update any package after changing version in composer.json file
+# composer update
+############
+
+############
+###### Creating a new Page in laravel
+# Make a View [ resources/views ]
+# Make a Route [ routes/web.php ]
+############
+
+############
+###### Routing in laravel
+# Make a new page with Routing [ as above ]
+# Anchor tag with Routing [ using <a href> tag with routing names ]
+# Pass URL params with [ /test/{id} like routes ] [ Route::get('/test_id/{id}', function ($id) { ]
+# Pass Data with routing [ pass data to view ( pass data as array to views )] [ return view('test', ["id" => $id]); ]
+# Redirection [ Route::redirect('/here', 'test'); ]
+############
+
+############
+###### Controller in laravel [ app/Http/Controllers ]
+# Acts as a central unit which has the core business logic | Authentication logic etc. ]
+
+# Make a controller [ using command line ]
+# -> php artisan make:controller <ControllerName_with_CapitalLettrs_Plural>
+# php artisan make:controller Users
+
+# Call with Routing
+# Route::get('users', 'Users@index'); [ <ControllerClassName>@<functionName> ]
+
+# Pass Parameters [ Route::get('users/{id}', 'Users@show'); ] [ public function show($id){ ]
+
+# Importance
+# -> database access
+# -> session layer
+# -> api usage -> no view part, so controller is important
+############
+
+############
+###### Views in laravel
+# Make a view
+# Call with Routing [ Route::view('/mobiles', 'mobile'); ] || [ Route::get('/test', function () { return view('test'); } ]
+# Call with Controller
+# Pass data with view Call
+############
+
+############
+###### Http Request in laravel
+# In controller -> public function index(Request $req)
+echo "Method: " . $req->method() . '<br>';
+echo "Url: " . $req->url() . '<br>';
+echo "FullUrl: " . $req->fullUrl() . '<br>';
+echo "Path: " . $req->path() . '<br>';
+echo "Query: " . print_r($req->query()) . '<br>'
+ if($req->isMethod('GET')){
+############
+
+
+############
+###### Form submissin in laravel
+# View
+# Submit Form code
+# Routing for view
+# controller
+# controller code to handle form submitting
+# Routing for controller
+
+@csrf -> to protect cross site request forgery
+
+=================
+Form Validation
+=================
+<form action="form_submit" method="GET">
+    @csrf
+    <input type="text" name="user"/>
+    @error('user')
+    <div>
+        {{$message}}
+    </div>
+    @enderror
+    <br><br>
+    <input type="password" name="password"/>
+    <br>
+    {{-- {{$errors->all()['password']}} --}}
+    <br><br>
+    <button type="submit">Submit</button>
+</form>
+
+$req->validate([
+    'user' => 'required',
+    'password' => 'required|min: 8|max: 10'
+]);
+############
+
+######################
+# Middleware
+######################
+# what is Middleware -> lets say check user is logged in or not ( use of middleware -> before controller or view it is called first )
+# creating a middleware -> php artisan make:middleware Age
+# types of middleware -> global | group | Single
+# define middleware in kernel file ( app/Http/Kernel.php )
+# mention in global / group / Single
+# group:
+'age' => [
+            \App\Http\Middleware\Age::class,
+        ]
+#How to use group middleware
+Route::get('/', function () {
+    return view('welcome');
+})->middleware('age');
+
+#How to use single middleware
+Route::get('/', function () {
+    return view('welcome');
+})->middleware('ageChecker'); // whatever name you have given to that middleware
+
+# How to make it conditional
+Put code in middleware function
+public function handle($request, Closure $next)
+    {
+        if($request->input('age') < 20){
+            return redirect('/');
+        }
+        echo "Test Age";
+        return $next($request);
+    }
+
+######################
+
+######################
+# Flash Sessions
+######################
+In Controller -> $req->session()->flash('data','Form submitted successfully');
+In View: <h1>{{Session::get('data')}}</h1>
+######################
+
+######################
+# database
+######################
+# config -> database.php ( dont update in this file )
+# Update .env file to use correct database Parameters
+# use Illuminate\Support\Facades\DB;
+# $users = DB::select('select * from users');
+
+####### QUERY BUILDER
+
+# GET | UPDATE | DELETE
+
+//$users = DB::select('select * from users');
+//$users = DB::table('users')->get();
+//$users = DB::table('users')->where('id', '1')->get();
+//$users = DB::table('users')->find(1); // find woks only with id column
+//$users = DB::table('users')->count();
+// $users = DB::table('employee')->insert([
+//     'name' => 'Ankit',
+//     'age' => '35',
+//     'salary' => '4000000.0'
+// ]);
+// $users = DB::table('employee')->
+// where([
+//     'name' => 'Ankit'
+// ])->
+// update([
+//     'age' => '36'
+// ]);
+// $users = DB::table('employee')->
+// where([
+//     'name' => 'Ankit'
+// ])->delete();
+$users = DB::table('employee')->max('id');
+
+using joins:
+$users = DB::table('users')->
+        select('posts.title', 'users.name')->
+        join('posts', 'users.id', 'user_id')->
+        where('users.name','Sumit')->
+        get();
+
+######################
+
+
+#####################
+# Model in laravel
+#####################
+# Making a Model
+# Always singular in name [ DB table corresponding to this model should be plural ]
+In Model:
+// If you wish to fetch different table name from this model ( other than blogs )
+protected $table = "posts";
+
+Access table data in controller via Model class:
+$users = Blog::all();
+#####################
+
+
+########################
+# Pagination in laravel
+########################
+in controller :
+$posts = DB::table('posts')->paginate(2);
+pass data to view
+return view('blogs', ['posts'=>$posts]);
+
+show pages in view
+ <ul>
+@foreach ($posts as $post)
+    <li>{{$post->title}}</li>
+@endforeach
+</ul>
+<div>
+    {{$posts->links()}}
+</div>
+
+########################
+
+
+########################
+# send mail via gmail | localhost
+########################
+
+In Routes file inside :
+Route::get('/', function () {
+    // $to_name="Ankit Gupta";
+    // $to_email="ankithbti007@gmail.com";
+    // $data = array('name'=>'Peter', 'body'=>'Test mail from localhost');
+    // Mail::send('mail', $data, function($message) use ($to_name, $to_email){
+    //     $message->to($to_email)->subject('Subject of mail');
+    // });
+    //return view('welcome');
+});
+
+In Controller, Put Use Mail;
+
+
+#######################
